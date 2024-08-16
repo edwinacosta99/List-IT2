@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/board.dart';
-import 'package:myapp/tasklist_screen.dart';
+import '../../models/board.dart';
+import 'package:myapp/screens/tasklist_screen.dart';
 
 
 class BoardsScreen extends StatelessWidget {

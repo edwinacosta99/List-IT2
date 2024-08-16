@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/task_list.dart';
+import '../../models/task_list.dart';
 
 // Aquí se define el resto del código para la pantalla de tarjetas.
 

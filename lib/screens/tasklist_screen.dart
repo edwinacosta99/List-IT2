@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/board.dart';
+import '../../models/board.dart';
 import 'cards_screen.dart';
 
 // Aquí se define el resto del código para la pantalla de listas.
