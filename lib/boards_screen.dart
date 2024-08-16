@@ -5,8 +5,8 @@ import 'package:myapp/tasklist_screen.dart';
 
 class BoardsScreen extends StatelessWidget {
   final List<Board> boards = [
-    Board(id: '1', title: 'Project 1', taskLists: []),
-    Board(id: '2', title: 'Project 2', taskLists: []),
+    Board(id: '1', title: 'Proyecto 1', taskLists: []),
+    Board(id: '2', title: 'Proyecto 2', taskLists: []),
     // Agrega más tableros si lo deseas
   ];
 

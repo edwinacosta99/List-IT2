@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/boards_screen.dart';
+import 'package:myapp/home.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Trello Clone',
+      title: 'List-it',
+      color: Colors.red,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: BoardsScreen(),
+      home: HomeScreen(),
     );
   }
 }
