@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../screens/boards_page.dart';
 import 'card_widget.dart';
+import '../screens/boards_page.dart';
 
 class TaskListWidget extends StatefulWidget {
   final TaskList taskList;
@@ -99,10 +99,10 @@ class _TaskListWidgetState extends State<TaskListWidget> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Add Card'),
+          title: Text('Add New Card'),
           content: TextField(
             controller: controller,
-            decoration: InputDecoration(hintText: 'Enter card name'),
+            decoration: InputDecoration(hintText: 'Enter card content'),
           ),
           actions: [
             TextButton(
