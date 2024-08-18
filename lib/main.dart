@@ -1,66 +1,55 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import 'package:myapp/constants/constants.dart';
-import 'package:myapp/providers/auth_provider.dart';
-import 'package:myapp/providers/connectivity_provider.dart';
-import 'package:myapp/splash_screen.dart';
-import 'package:trelloapp/src/views/auth/login_screen.dart';
-import 'package:trelloapp/src/views/auth/signup_screen.dart';
-import 'package:trelloapp/src/views/home_screen.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'screens/boards_page.dart';
+import 'screens/settings_page.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
-      .then((_) {
-    runApp(new MyApp());
-  });
+void main() {
+  runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  @override
-  void initState() {
-    if (kIsWeb) {
-      isWeb = true;
-      print("Running on WEB");
-    } else {
-      isWeb = false;
-    }
-    super.initState();
-  }
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<ConnectivityProvider>(
-            create: (_) => ConnectivityProvider()),
-        ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          scaffoldBackgroundColor: Colors.white,
-          textTheme: GoogleFonts.poppinsTextTheme(
-            Theme.of(context).textTheme,
-          ),
+    return MaterialApp(
+      title: 'List-it',
+      theme: ThemeData(
+        primarySwatch: Colors.red,
+      ),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => BoardsPage()),
+                );
+              },
+              child: Text('Go to Boards'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsScreen()),
+                );
+              },
+              child: Text('Go to Settings'),
+            ),
+          ],
         ),
-        routes: {
-          '/': (context) => SplashScreen(),
-          '/loginscreen': (context) => LoginScreen(),
-          '/signupscreen': (context) => SignupScreen(),
-          '/homescreen': (context) => HomeScreen(),
-        },
       ),
     );
   }
