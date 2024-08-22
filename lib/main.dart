@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'screens/boards_page.dart';
 import 'screens/settings_page.dart';
+import 'auth/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +15,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});  // Agregado `key`
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,17 +24,39 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: HomePage(),
+      home: const AuthHandler(),  // Cambio aquí
+    );
+  }
+}
+
+class AuthHandler extends StatelessWidget {
+  const AuthHandler({super.key});  // Agregado `key`
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();  // Añadido const
+        } else if (snapshot.hasData) {
+          return HomePage();  // Removido const
+        } else {
+          return LoginScreen();  // Removido const
+        }
+      },
     );
   }
 }
 
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});  // Agregado `key`
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),  // Añadido const
       ),
       body: Center(
         child: Column(
@@ -40,19 +66,19 @@ class HomePage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BoardsPage()),
+                  MaterialPageRoute(builder: (context) => BoardsPage()),  // Removido const
                 );
               },
-              child: Text('Go to Boards'),
+              child: const Text('Go to Boards'),  // Añadido const
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SettingsScreen()),
+                  MaterialPageRoute(builder: (context) => SettingsScreen()),  // Removido const
                 );
               },
-              child: Text('Go to Settings'),
+              child: const Text('Go to Settings'),  // Añadido const
             ),
           ],
         ),
