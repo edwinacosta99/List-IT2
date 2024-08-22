@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "260550777562",
+    "project_id": "list-it-65203",
+    "storage_bucket": "list-it-65203.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260550777562:android:f38e0430cb7e848f3c23e3",
+        "android_client_info": {
+          "package_name": "hn.unah.proye"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqxRPLO-hdowHD11dvEw7zU5ZQjRdgUSs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
