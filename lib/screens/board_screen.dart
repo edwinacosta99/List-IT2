@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'list_screen.dart';
 
 class BoardScreen extends StatefulWidget {
@@ -9,9 +10,30 @@ class BoardScreen extends StatefulWidget {
 class _BoardScreenState extends State<BoardScreen> {
   final List<String> boards = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadBoards();
+  }
+
+  // Cargar los tableros guardados
+  void _loadBoards() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      boards.addAll(prefs.getStringList('boards') ?? []);
+    });
+  }
+
+  // Guardar los tableros
+  void _saveBoards() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('boards', boards);
+  }
+
   void _addNewBoard(String boardName) {
     setState(() {
       boards.add(boardName);
+      _saveBoards(); // Guardar cambios en los tableros
     });
   }
 
@@ -49,43 +71,82 @@ class _BoardScreenState extends State<BoardScreen> {
     );
   }
 
+  void _editBoard(int index) {
+    final TextEditingController _boardNameController = TextEditingController(text: boards[index]);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Board'),
+          content: TextField(
+            controller: _boardNameController,
+            decoration: InputDecoration(hintText: 'Enter new board name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_boardNameController.text.isNotEmpty) {
+                  setState(() {
+                    boards[index] = _boardNameController.text;
+                    _saveBoards(); // Guardar cambios en los tableros
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteBoard(int index) {
+    setState(() {
+      boards.removeAt(index);
+      _saveBoards(); // Guardar cambios después de eliminar
+    });
+  }
+
+  void _showDeleteConfirmationDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Board'),
+          content: Text('Are you sure you want to delete this board?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteBoard(index);
+                Navigator.of(context).pop();
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Boards'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              // Lógica para búsqueda
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {
-              // Lógica para notificaciones
-            },
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          children: <Widget>[
-            DrawerHeader(
-              child: Text('list-it Workspace'),
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-            ),
-            ListTile(
-              title: Text('Board 1'),
-              onTap: () {
-                // Lógica para abrir otro tablero
-              },
-            ),
-          ],
-        ),
       ),
       body: boards.isEmpty
           ? Center(
@@ -100,15 +161,32 @@ class _BoardScreenState extends State<BoardScreen> {
                 return ListTile(
                   title: Text(
                     boards[index],
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
                   leading: Icon(
                     Icons.dashboard,
                     color: Colors.blue,
                   ),
-                  trailing: Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _editBoard(index);
+                      } else if (value == 'delete') {
+                        _showDeleteConfirmationDialog(index);
+                      }
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return [
+                        PopupMenuItem<String>(
+                          value: 'edit',
+                          child: Text('Edit'),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ];
+                    },
                   ),
                   onTap: () {
                     Navigator.push(
