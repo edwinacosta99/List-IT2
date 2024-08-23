@@ -1,4 +1,4 @@
-package hn.unah.listit
+package hn.u
 
 import io.flutter.embedding.android.FlutterActivity
 
