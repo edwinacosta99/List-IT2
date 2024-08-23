@@ -22,24 +22,29 @@ class _ListScreenState extends State<ListScreen> {
   }
 
   void _loadData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      lists = prefs.getStringList('${widget.boardName}_lists') ?? [];
-      String? cardsJson = prefs.getString('${widget.boardName}_cards');
-      if (cardsJson != null) {
-        cards = Map<String, List<String>>.from(json.decode(cardsJson));
-      } else {
-        if (lists.isEmpty) {
-          lists = ['To Do', 'In Progress', 'Done'];
-          cards = {
-            'To Do': [],
-            'In Progress': [],
-            'Done': [],
-          };
-        }
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  setState(() {
+    lists = prefs.getStringList('${widget.boardName}_lists') ?? [];
+    String? cardsJson = prefs.getString('${widget.boardName}_cards');
+    if (cardsJson != null) {
+      Map<String, dynamic> decodedMap = json.decode(cardsJson);
+      // Convertimos cada valor del mapa a List<String>
+      cards = decodedMap.map((key, value) {
+        return MapEntry(key, List<String>.from(value));
+      });
+    } else {
+      if (lists.isEmpty) {
+        lists = ['To Do', 'In Progress', 'Done'];
+        cards = {
+          'To Do': [],
+          'In Progress': [],
+          'Done': [],
+        };
       }
-    });
-  }
+    }
+  });
+}
+
 
   void _saveData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
