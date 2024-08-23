@@ -31,7 +31,7 @@ class _ListScreenState extends State<ListScreen> {
       if (cardsJson != null) {
         cards = Map<String, List<String>>.from(json.decode(cardsJson));
       } else {
-        // Si no hay datos guardados, inicializamos las listas vacías
+        // Inicializar listas y tarjetas si no hay datos guardados
         if (lists.isEmpty) {
           lists = ['To Do', 'In Progress', 'Done'];
           cards = {
@@ -51,17 +51,17 @@ class _ListScreenState extends State<ListScreen> {
     await prefs.setString('${widget.boardName}_cards', json.encode(cards));
   }
 
-  void _addCard(String listName) {
-    final TextEditingController _cardNameController = TextEditingController();
+  void _addNewList() {
+    final TextEditingController _listNameController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('New Card'),
+          title: Text('New List'),
           content: TextField(
-            controller: _cardNameController,
-            decoration: InputDecoration(hintText: 'Enter card name'),
+            controller: _listNameController,
+            decoration: InputDecoration(hintText: 'Enter list name'),
           ),
           actions: [
             TextButton(
@@ -72,10 +72,11 @@ class _ListScreenState extends State<ListScreen> {
             ),
             TextButton(
               onPressed: () {
-                if (_cardNameController.text.isNotEmpty) {
+                if (_listNameController.text.isNotEmpty) {
                   setState(() {
-                    cards[listName]!.add(_cardNameController.text);
-                    _saveData(); // Guardar datos cuando se añade una tarjeta
+                    lists.add(_listNameController.text);
+                    cards[_listNameController.text] = []; // Inicializar lista de tarjetas
+                    _saveData(); // Guardar datos cuando se añade una nueva lista
                   });
                   Navigator.of(context).pop();
                 }
@@ -88,9 +89,49 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 
+  void _editList(int index) {
+    final TextEditingController _listNameController = TextEditingController(text: lists[index]);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit List'),
+          content: TextField(
+            controller: _listNameController,
+            decoration: InputDecoration(hintText: 'Enter new list name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_listNameController.text.isNotEmpty) {
+                  setState(() {
+                    String oldName = lists[index];
+                    lists[index] = _listNameController.text;
+                    cards[_listNameController.text] = cards.remove(oldName) ?? [];
+                    _saveData(); // Guardar datos cuando se edita una lista
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _deleteList(int index) {
     setState(() {
-      cards.remove(lists[index]);
+      String listName = lists[index];
+      cards.remove(listName); // Eliminar tarjetas asociadas con la lista
       lists.removeAt(index);
       _saveData(); // Guardar datos cuando se elimina una lista
     });
@@ -123,6 +164,63 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 
+  void _addCard(String listName) {
+    final TextEditingController _cardNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('New Card'),
+          content: TextField(
+            controller: _cardNameController,
+            decoration: InputDecoration(hintText: 'Enter card name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_cardNameController.text.isNotEmpty) {
+                  setState(() {
+                    cards[listName] = cards[listName] ?? []; // Asegurarse de que la lista no sea nula
+                    cards[listName]!.add(_cardNameController.text);
+                    _saveData(); // Guardar datos cuando se añade una tarjeta
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editCard(String listName, int cardIndex) async {
+    final updatedCardName = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CardScreen(
+          listName: listName,
+          cardName: cards[listName]![cardIndex],
+        ),
+      ),
+    );
+
+    if (updatedCardName != null && updatedCardName != cards[listName]![cardIndex]) {
+      setState(() {
+        cards[listName]![cardIndex] = updatedCardName;
+        _saveData(); // Guardar datos cuando se edita una tarjeta
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,39 +242,47 @@ class _ListScreenState extends State<ListScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      lists[index],
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
+                    Expanded(
+                      child: Text(
+                        lists[index],
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _showDeleteConfirmationDialog(index),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'Edit') {
+                          _editList(index);
+                        } else if (value == 'Delete') {
+                          _showDeleteConfirmationDialog(index);
+                        }
+                      },
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem(
+                          value: 'Edit',
+                          child: Text('Edit'),
+                        ),
+                        PopupMenuItem(
+                          value: 'Delete',
+                          child: Text('Delete'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: cards[lists[index]]!.length,
+                    itemCount: cards[lists[index]]?.length ?? 0,
                     itemBuilder: (context, cardIndex) {
                       return Card(
                         color: Colors.grey[800],
                         child: ListTile(
                           title: Text(cards[lists[index]]![cardIndex]),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CardScreen(
-                                  listName: lists[index],
-                                  cardName: cards[lists[index]]![cardIndex],
-                                ),
-                              ),
-                            );
-                          },
+                          onTap: () => _editCard(lists[index], cardIndex),
                         ),
                       );
                     },
@@ -195,13 +301,7 @@ class _ListScreenState extends State<ListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            lists.add('New List');
-            cards['New List'] = [];
-            _saveData(); // Guardar datos cuando se añade una nueva lista
-          });
-        },
+        onPressed: _addNewList,
         child: Icon(Icons.add),
       ),
     );
