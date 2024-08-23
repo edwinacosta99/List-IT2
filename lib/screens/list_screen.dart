@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert'; // Necesario para codificar y decodificar JSON
-import 'card_screen.dart';
+import 'dart:convert';
 
 class ListScreen extends StatefulWidget {
   final String boardName;
@@ -22,7 +21,6 @@ class _ListScreenState extends State<ListScreen> {
     _loadData();
   }
 
-  // Cargar los datos guardados
   void _loadData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -31,7 +29,6 @@ class _ListScreenState extends State<ListScreen> {
       if (cardsJson != null) {
         cards = Map<String, List<String>>.from(json.decode(cardsJson));
       } else {
-        // Inicializar listas y tarjetas si no hay datos guardados
         if (lists.isEmpty) {
           lists = ['To Do', 'In Progress', 'Done'];
           cards = {
@@ -44,7 +41,6 @@ class _ListScreenState extends State<ListScreen> {
     });
   }
 
-  // Guardar los datos
   void _saveData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('${widget.boardName}_lists', lists);
@@ -75,88 +71,13 @@ class _ListScreenState extends State<ListScreen> {
                 if (_listNameController.text.isNotEmpty) {
                   setState(() {
                     lists.add(_listNameController.text);
-                    cards[_listNameController.text] = []; // Inicializar lista de tarjetas
-                    _saveData(); // Guardar datos cuando se añade una nueva lista
+                    cards[_listNameController.text] = [];
+                    _saveData();
                   });
                   Navigator.of(context).pop();
                 }
               },
               child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _editList(int index) {
-    final TextEditingController _listNameController = TextEditingController(text: lists[index]);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit List'),
-          content: TextField(
-            controller: _listNameController,
-            decoration: InputDecoration(hintText: 'Enter new list name'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (_listNameController.text.isNotEmpty) {
-                  setState(() {
-                    String oldName = lists[index];
-                    lists[index] = _listNameController.text;
-                    cards[_listNameController.text] = cards.remove(oldName) ?? [];
-                    _saveData(); // Guardar datos cuando se edita una lista
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteList(int index) {
-    setState(() {
-      String listName = lists[index];
-      cards.remove(listName); // Eliminar tarjetas asociadas con la lista
-      lists.removeAt(index);
-      _saveData(); // Guardar datos cuando se elimina una lista
-    });
-  }
-
-  void _showDeleteConfirmationDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete List'),
-          content: Text('Are you sure you want to delete this list?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                _deleteList(index);
-                Navigator.of(context).pop();
-              },
-              child: Text('Delete'),
             ),
           ],
         );
@@ -187,9 +108,9 @@ class _ListScreenState extends State<ListScreen> {
               onPressed: () {
                 if (_cardNameController.text.isNotEmpty) {
                   setState(() {
-                    cards[listName] = cards[listName] ?? []; // Asegurarse de que la lista no sea nula
+                    cards[listName] = cards[listName] ?? [];
                     cards[listName]!.add(_cardNameController.text);
-                    _saveData(); // Guardar datos cuando se añade una tarjeta
+                    _saveData();
                   });
                   Navigator.of(context).pop();
                 }
@@ -202,23 +123,12 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 
-  void _editCard(String listName, int cardIndex) async {
-    final updatedCardName = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CardScreen(
-          listName: listName,
-          cardName: cards[listName]![cardIndex],
-        ),
-      ),
-    );
-
-    if (updatedCardName != null && updatedCardName != cards[listName]![cardIndex]) {
-      setState(() {
-        cards[listName]![cardIndex] = updatedCardName;
-        _saveData(); // Guardar datos cuando se edita una tarjeta
-      });
-    }
+  void _onCardDropped(String fromList, String toList, int cardIndex) {
+    setState(() {
+      String card = cards[fromList]!.removeAt(cardIndex);
+      cards[toList]!.add(card);
+      _saveData();
+    });
   }
 
   @override
@@ -231,6 +141,7 @@ class _ListScreenState extends State<ListScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: lists.length,
         itemBuilder: (context, index) {
+          String listName = lists[index];
           return Container(
             width: 250,
             margin: EdgeInsets.all(10),
@@ -244,7 +155,7 @@ class _ListScreenState extends State<ListScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        lists[index],
+                        listName,
                         style: TextStyle(
                           fontSize: 18,
                           color: Colors.white,
@@ -255,9 +166,9 @@ class _ListScreenState extends State<ListScreen> {
                     PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == 'Edit') {
-                          _editList(index);
+                          // Implementar la funcionalidad de edición aquí
                         } else if (value == 'Delete') {
-                          _showDeleteConfirmationDialog(index);
+                          // Implementar la funcionalidad de eliminación aquí
                         }
                       },
                       itemBuilder: (BuildContext context) => [
@@ -275,21 +186,45 @@ class _ListScreenState extends State<ListScreen> {
                 ),
                 SizedBox(height: 10),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: cards[lists[index]]?.length ?? 0,
-                    itemBuilder: (context, cardIndex) {
-                      return Card(
-                        color: Colors.grey[800],
-                        child: ListTile(
-                          title: Text(cards[lists[index]]![cardIndex]),
-                          onTap: () => _editCard(lists[index], cardIndex),
-                        ),
+                  child: DragTarget<String>(
+                    onAccept: (data) {
+                      int cardIndex = int.parse(data.split('-')[1]);
+                      String fromList = data.split('-')[0];
+                      _onCardDropped(fromList, listName, cardIndex);
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      return ListView.builder(
+                        itemCount: cards[listName]!.length,
+                        itemBuilder: (context, cardIndex) {
+                          String card = cards[listName]![cardIndex];
+                          return Draggable<String>(
+                            data: '$listName-$cardIndex',
+                            feedback: Material(
+                              color: Colors.transparent,
+                              child: Container(
+                                padding: EdgeInsets.all(8.0),
+                                color: Colors.grey[700],
+                                child: Text(
+                                  card,
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            childWhenDragging: Container(),
+                            child: Card(
+                              color: Colors.grey[800],
+                              child: ListTile(
+                                title: Text(card),
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
                 ),
                 TextButton(
-                  onPressed: () => _addCard(lists[index]),
+                  onPressed: () => _addCard(listName),
                   child: Text(
                     '+ Add card',
                     style: TextStyle(color: Colors.blue),
