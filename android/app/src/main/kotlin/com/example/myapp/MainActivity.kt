@@ -1,4 +1,4 @@
-package hn.unah.proyectolp
+package com.example.myapp
 
 import io.flutter.embedding.android.FlutterActivity
 
