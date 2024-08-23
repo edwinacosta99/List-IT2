@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'list_screen.dart';
+import '../services/auth_service.dart';
 
 class BoardScreen extends StatefulWidget {
   @override
@@ -16,7 +17,6 @@ class _BoardScreenState extends State<BoardScreen> {
     _loadBoards();
   }
 
-  // Cargar los tableros guardados
   void _loadBoards() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -24,7 +24,6 @@ class _BoardScreenState extends State<BoardScreen> {
     });
   }
 
-  // Guardar los tableros
   void _saveBoards() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('boards', boards);
@@ -33,7 +32,7 @@ class _BoardScreenState extends State<BoardScreen> {
   void _addNewBoard(String boardName) {
     setState(() {
       boards.add(boardName);
-      _saveBoards(); // Guardar cambios en los tableros
+      _saveBoards();
     });
   }
 
@@ -72,7 +71,8 @@ class _BoardScreenState extends State<BoardScreen> {
   }
 
   void _editBoard(int index) {
-    final TextEditingController _boardNameController = TextEditingController(text: boards[index]);
+    final TextEditingController _boardNameController =
+        TextEditingController(text: boards[index]);
 
     showDialog(
       context: context,
@@ -95,7 +95,7 @@ class _BoardScreenState extends State<BoardScreen> {
                 if (_boardNameController.text.isNotEmpty) {
                   setState(() {
                     boards[index] = _boardNameController.text;
-                    _saveBoards(); // Guardar cambios en los tableros
+                    _saveBoards();
                   });
                   Navigator.of(context).pop();
                 }
@@ -111,7 +111,7 @@ class _BoardScreenState extends State<BoardScreen> {
   void _deleteBoard(int index) {
     setState(() {
       boards.removeAt(index);
-      _saveBoards(); // Guardar cambios después de eliminar
+      _saveBoards();
     });
   }
 
@@ -142,11 +142,22 @@ class _BoardScreenState extends State<BoardScreen> {
     );
   }
 
+  void _signOut() async {
+    await AuthService()
+        .signout(context: context); // Usar el argumento con nombre
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Boards'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _signOut,
+          ),
+        ],
       ),
       body: boards.isEmpty
           ? Center(
