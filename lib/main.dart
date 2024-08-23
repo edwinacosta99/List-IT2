@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'screens/board_screen.dart';
+import 'screens/login.dart';  // Importación de la pantalla de Login
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';  // Importar FirebaseAuth
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +25,25 @@ class ListItApp extends StatelessWidget {
           backgroundColor: Colors.green,
         ),
       ),
-      home: BoardScreen(),
+      home: AuthWrapper(), // Cambiado para usar AuthWrapper
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator()); // Indicador de carga centrado mientras se espera
+        } else if (snapshot.hasData) {
+          return BoardScreen(); // Usuario autenticado
+        } else {
+          return Login(); // Usuario no autenticado
+        }
+      },
     );
   }
 }
